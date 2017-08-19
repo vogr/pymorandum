@@ -1,1 +1,0 @@
-- Allow ninja to bootstrap itself: add a generator=1 rule to let it decide wether to regenerate a ninja.build. (Can it work? How can ninja know on which files to depend?)
