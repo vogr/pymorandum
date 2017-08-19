@@ -1,6 +1,8 @@
 import argparse
+import json
 import logging as log
 from pathlib import Path
+import sys
 
 import ninja
 #import jinja2
@@ -8,18 +10,7 @@ import ninja
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-l", "--log", dest="logLevel",
-                        choices=['DEBUG', 'INFO', 'WARNING',
-                                 'ERROR', 'CRITICAL'],
-                        default="INFO",
-                        help="Set the logging level")
-    parser.add_argument('-d', dest='outdir_path',
-                        default='_site')
-    parser.add_argument('indir_path')
-    parser.add_argument('-i', dest='icc_profile_path',
-                        default='/usr/share/color/icc/colord/sRGB.icc')
-    parser.add_argument('-c', dest='config_dir_path',
-                        default='pymorandum_config')
+    parser.add_argument('--init', action='store_true')
     return parser.parse_args()
 
 def main():
@@ -62,30 +53,52 @@ def main():
         ├── IMG-53
             ...
     """
-
     args = parse_args()
-    log.basicConfig(level=getattr(log, args.logLevel))
+    config_file = Path('config.json').absolute()
+
+    if args.init:
+        if not config_file.exists():
+            default_config = {}
+            default_config['input_directory'] = '~/Pictures'
+            default_config['output_directory'] = '_site'
+            default_config['ressources_directory'] = 'ressources'
+            default_config['log_level'] = 'INFO'
+            default_config['icc_profile_path'] = '/usr/share/color/icc/colord/sRGB.icc'
+            json.dump(default_config, config_file.open('w'), indent=True)
+            log.warn("Config file has been written to {}".format(config_file))
+        else:
+            log.warn("Config file already exists, it will not be modified.")
+        sys.exit()
+
+    if not config_file.exists():
+        log.warn("Config file doesn't exist yet, aborting.")
+        log.warn("If you would like to write the default config and templates, use --init.")
+        raise FileNotFoundError("config.json")
+
+    user_config = json.loads(config_file.read_text())
+
+    log.basicConfig(level=getattr(log, user_config['log_level']))
+    log.info("Reading config from {}".format(config_file))
 
     config = {}
-
-
-    config['indir'] = Path(args.indir_path).absolute()
-    config['outdir'] = Path(args.outdir_path).absolute()
-    config['config_dir'] = Path(args.config_dir_path).absolute()
+    config['indir'] = Path(user_config["input_directory"]).expanduser().absolute()
+    config['outdir'] = Path(user_config["output_directory"]).expanduser().absolute()
+    config['ressources'] = Path(user_config["ressources_directory"]).expanduser().absolute()
     log.info('Using input directory: {}'.format(config['indir']))
     if not config['indir'].exists():
         raise Exception("Directory {} doesn't exist".format(config['indir']))
+    config['ressources'].mkdir(exist_ok=True)
 
     log.info('Using output directory: {}'.format(config['outdir']))
-    log.info('Reading config from: {}'.format(config['config_dir']))
+    log.info('Using ressources from: {}'.format(config['ressources']))
     
-    config['ninjafile'] = (config['config_dir'] / Path('build.ninja')).absolute()
+    config['ninjafile'] = Path('build.ninja').absolute()
     config['assets'] = config['outdir'] / Path('assets')
-    config['icc_profile'] = Path(args.icc_profile_path).absolute()
+    config['icc_profile'] = Path(user_config['icc_profile_path']).absolute()
 
     config['photo_exts'] = set(['.jpg', '.jpeg', '.png'])
     config['sizes'] = ['1920', '1280', '1024', '640', '320']
-    config['video_exts'] = set(['.mov', '.avi'])
+    config['video_exts'] = set(['.mov', '.avi', '.mts'])
     config['codecs'] = ['webm', 'mp4']
     #mp4: h264, aac
     #webm: vp8, vorbis
@@ -96,7 +109,7 @@ def main():
     #config['vips_options'].append('--linear')
 
     n = ninja.Writer(config['ninjafile'].open('w', encoding='utf-8'))
-    n.variable('builddir', str(config['outdir']))
+    #n.variable('builddir', str(config['outdir']))
     n.variable('vips_options', ' '.join(config['vips_options']))
     n.variable('ffmpeg_options', '-threads 0')
     
@@ -112,7 +125,7 @@ def main():
                     $in'
            )
     n.rule(name='ffmpeg-webm',
-           command='ffmpeg i-i $in \
+           command='ffmpeg -i $in \
                     -c:v libvpx -b:v 1M -crf 30 \
                     -c:a libvorbis -q:a 4 \
                     $out'
@@ -126,25 +139,28 @@ def main():
                     $out'
           )
     
-    n.build(str(config['assets']), 'rsync', inputs=str(config['config_dir'] / Path('assets')))
+    if config['assets'].is_dir():
+        n.build(str(config['assets']), 'rsync', inputs=str(config['ressources'] / Path('assets')))
     for collection in (d.absolute() for d in config['indir'].iterdir() if d.is_dir()):
-        for f in (p.absolute() for p in collection.iterdir() if
-                        p.is_file() and p.suffix):
+        for f in (p.absolute() for p in collection.iterdir() if p.is_file()):
             relative = f.relative_to(config['indir'])
             original = config['outdir'] / relative / Path('original')
             n.build(str(original), 'copy', inputs=str(f))
 
-            if f.suffix in config['photo_exts']:
+            if f.suffix.lower() in config['photo_exts']:
                 for size in config['sizes']:
                     out = config['outdir'] / relative / Path("{}px.jpg".format(size))
                     n.build(str(out), 'make_thumbnails',
                             inputs=str(f), variables={'size':size})
 
-            elif f.suffix in config['video_exts']:
+            elif f.suffix.lower() in config['video_exts']:
                 for codec in config['codecs']:
                     out = config['outdir'] / relative / Path('video.{}'.format(codec))
                     n.build(str(out), 'ffmpeg-{}'.format(codec), inputs=str(f))
-    ninja.ninja(config['ninjafile'])
+
+    ninja.ninja()
+
+
 
 if __name__ == '__main__':
     main()
