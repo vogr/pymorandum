@@ -2,11 +2,11 @@ import argparse
 import json
 import logging as log
 from pathlib import Path
+import subprocess
 import sys
 
-import ninja
-#import jinja2
-#from tqdm import tqdm
+import ninja_syntax
+import jinja2
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -22,35 +22,21 @@ def main():
     input_directory
     ├── Holidays in Rome
     │   ├── IMG-3.jpg
-    │   ├── IMG-4.jpg
-    │   └── IMG-5.jpg
     │       ...
     └── Holidays in Tokyo
         ├── IMG-52.jpg
-        ├── IMG-53.jpg
-        └── IMG-54.jpg
             ...
 
     _site (output directory)
     ├── Holidays in Rome
     │   ├── IMG-3
-    │   │   ├── 1024px.jpg
-    │   │   ├── 1280px.jpg
-    │   │   ├── 1920px.jpg
-    │   │   ├── 320px.jpg
-    │   │   ├── 640px.jpg
+    │   │   ├── 1024px.jpg
+    │   │   │     ...
     │   │   └── original
-    │   ├── IMG-4 
     │        ...
     └── Holidays in Tokyo
         ├── IMG-52
         │   ├── 1024px.jpg
-        │   ├── 1280px.jpg
-        │   ├── 1920px.jpg
-        │   ├── 320px.jpg
-        │   ├── 640px.jpg
-        │   └── original
-        ├── IMG-53
             ...
     """
     args = parse_args()
@@ -64,7 +50,12 @@ def main():
             default_config['ressources_directory'] = 'ressources'
             default_config['log_level'] = 'INFO'
             default_config['icc_profile_path'] = '/usr/share/color/icc/colord/sRGB.icc'
-            json.dump(default_config, config_file.open('w'), indent=True)
+            default_config['template_variables'] = {
+                 'gallery_title': 'My Photo Library',
+                 'gallery_description': 'Que le jour recommence et que le jour finisse',
+                 'sidebar_content':'Sans que jamais Titus puisse voir Bérénice'
+                }
+            config_file.write_text(json.dumps(default_config, indent=True))
             log.warn("Config file has been written to {}".format(config_file))
         else:
             log.warn("Config file already exists, it will not be modified.")
@@ -93,7 +84,6 @@ def main():
     log.info('Using ressources from: {}'.format(config['ressources']))
     
     config['ninjafile'] = Path('build.ninja').absolute()
-    config['assets'] = config['outdir'] / Path('assets')
     config['icc_profile'] = Path(user_config['icc_profile_path']).absolute()
 
     config['photo_exts'] = set(['.jpg', '.jpeg', '.png'])
@@ -108,17 +98,15 @@ def main():
         config['vips_options'].append('--delete')
     #config['vips_options'].append('--linear')
 
-    n = ninja.Writer(config['ninjafile'].open('w', encoding='utf-8'))
+    n = ninja_syntax.Writer(config['ninjafile'].open('w', encoding='utf-8'))
     #n.variable('builddir', str(config['outdir']))
     n.variable('vips_options', ' '.join(config['vips_options']))
     n.variable('ffmpeg_options', '-threads 0')
     
-    n.rule(name='clean', command='rm -rf {}'.format(config['outdir']))
     n.rule(name='copy', command='cp $in $out')
     n.rule(name='rsync', command='rsync -aPzhu $in/ $out')
     n.rule(name='make_thumbnails',
            command='vipsthumbnail \
-                    --vips-progress \
                     --size x$size \
                     $vips_options \
                     -o $out[optimize_coding,strip] \
@@ -138,29 +126,50 @@ def main():
                     $ffmpeg_options \
                     $out'
           )
-    
-    if config['assets'].is_dir():
-        n.build(str(config['assets']), 'rsync', inputs=str(config['ressources'] / Path('assets')))
+
+    (config['ressources'] / Path('assets')).mkdir(exist_ok=True)
+    n.build(str(config['outdir'] / Path('assets')), 'rsync', inputs=str(config['ressources'] / Path('assets')))
+
+    slides = []
     for collection in (d.absolute() for d in config['indir'].iterdir() if d.is_dir()):
         for f in (p.absolute() for p in collection.iterdir() if p.is_file()):
             relative = f.relative_to(config['indir'])
-            original = config['outdir'] / relative / Path('original')
-            n.build(str(original), 'copy', inputs=str(f))
+            is_image = f.suffix.lower() in config['photo_exts']
+            is_video = f.suffix.lower() in config['video_exts']
+            is_media = is_image or is_video
+            if is_media:
+                src = Path("media") / relative
+                original_dest = config['outdir'] / src / Path('original')
+                n.build(str(original_dest), 'copy', inputs=str(f))
+                if is_image:
+                    photo_metadata = {'filename': str(src)}
+                    slide = {'type': 'photo', 'data': photo_metadata}
+                    slides.append(slide)
+                    for size in config['sizes']:
+                        out = config['outdir'] / src / Path("{}px.jpg".format(size))
+                        n.build(str(out), 'make_thumbnails',
+                                inputs=str(f), variables={'size':size})
+                elif is_video:
+                    for codec in config['codecs']:
+                        out = Path('media') / relative / Path('video.{}'.format(codec))
+                        n.build(str(config['outdir'] / out), 'ffmpeg-{}'.format(codec), inputs=str(f))
 
-            if f.suffix.lower() in config['photo_exts']:
-                for size in config['sizes']:
-                    out = config['outdir'] / relative / Path("{}px.jpg".format(size))
-                    n.build(str(out), 'make_thumbnails',
-                            inputs=str(f), variables={'size':size})
+    print(slides)
+    n.close()
 
-            elif f.suffix.lower() in config['video_exts']:
-                for codec in config['codecs']:
-                    out = config['outdir'] / relative / Path('video.{}'.format(codec))
-                    n.build(str(out), 'ffmpeg-{}'.format(codec), inputs=str(f))
+    subprocess.run(['ninja'])
 
-    ninja.ninja()
+    print("Jinja2")
 
+    template_loader = jinja2.FileSystemLoader(str(config['ressources']))
+    template_env = jinja2.Environment(loader=template_loader)
+    template = template_env.get_template('template.html')
 
+    template_vars = user_config['template_variables']
+    template_vars['slides'] = slides
+    output_text = template.render(template_vars)
+    (config['outdir'] / Path('index.html')).write_text(output_text)
+    print("Done")
 
 if __name__ == '__main__':
     main()
