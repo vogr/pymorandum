@@ -10,6 +10,7 @@ import pkg_resources
 from natsort import natsorted
 import ninja_syntax
 import jinja2
+import slugify
 
 
 def parse_args():
@@ -17,7 +18,7 @@ def parse_args():
     parser.add_argument('--init', action='store_true')
     return parser.parse_args()
 
-def render_template(collection, outfile, template_vars, template_dir):
+def render_template(outfile, template_vars, template_dir):
     template_loader = jinja2.FileSystemLoader(str(template_dir))
     template_env = jinja2.Environment(loader=template_loader)
     template = template_env.get_template('template.html')
@@ -25,30 +26,47 @@ def render_template(collection, outfile, template_vars, template_dir):
     output_text = template.render(template_vars)
     outfile.write_text(output_text)
 
+
+def init(config_file):
+    if not config_file.exists():
+        default_config = configparser.ConfigParser()
+        default_config['general_config'] = {
+            'input_directory': '~/Pictures/Photo Gallery',
+            'output_directory': '_site',
+            'resources_directory': 'resources',
+            'log_level': 'INFO',
+            'icc_profile_path': '/usr/share/color/icc/colord/sRGB.icc'
+        }
+        default_config['template_vars'] = {
+                'gallery_title': 'My Photo Library',
+                'gallery_description': 'Que le jour recommence et que le jour finisse',
+            }
+        with config_file.open('w') as c:
+            default_config.write(c)
+        log.warn("Config file has been written to {}".format(config_file))
+    else:
+        log.warn("Config file already exists, it will not be modified.")
+    user_config = configparser.ConfigParser()
+    user_config.read(config_file)
+    package_resources = Path(pkg_resources.resource_filename(__name__, "resources")).absolute()
+    user_resources = Path(user_config['general_config']['resources_directory']).absolute()
+    if not user_resources.exists():
+        log.warn("Copying resources to {}".format(user_resources))
+        subprocess.run(['rsync', '-aPzh',
+                        "{}/".format(package_resources),
+                        user_resources
+                    ])
+        log.warn("Exiting.")
+    else:
+        log.warn("Resources directory already exists at {}, aborting.".format(user_resources))
+    sys.exit()
+
 def main():
     args = parse_args()
     config_file = Path('config.ini').absolute()
 
     if args.init:
-        if not config_file.exists():
-            default_config = configparser.ConfigParser()
-            default_config['general_config'] = {
-                'input_directory': '~/Pictures/Photo Gallery',
-                'output_directory': '_site',
-                'resources_directory': 'resources',
-                'log_level': 'INFO',
-                'icc_profile_path': '/usr/share/color/icc/colord/sRGB.icc'
-            }
-            default_config['template_vars'] = {
-                 'gallery_title': 'My Photo Library',
-                 'gallery_description': 'Que le jour recommence et que le jour finisse',
-                }
-            with config_file.open('w') as c:
-                default_config.write(c)
-            log.warn("Config file has been written to {}".format(config_file))
-        else:
-            log.warn("Config file already exists, it will not be modified.")
-        sys.exit()
+        init(config_file)
 
     if not config_file.exists():
         log.warn("Config file doesn't exist yet, aborting.")
@@ -67,16 +85,9 @@ def main():
     config['indir'] = Path(general_config["input_directory"]).expanduser().absolute()
     config['outdir'] = Path(general_config["output_directory"]).expanduser().absolute()
     config['resources'] = Path(general_config["resources_directory"]).expanduser().absolute()
-    config['package_resources'] = Path(pkg_resources.resource_filename(__name__, "resources")).absolute()
-
     log.info('Using input directory: {}'.format(config['indir']))
     if not config['indir'].exists():
         raise Exception("Directory {} doesn't exist".format(config['indir']))
-    if not config['resources'].exists():
-        subprocess.run(['rsync', '-aPzh',
-                        "{}/".format(config['package_resources']),
-                        config['resources']
-                       ])
 
     log.info('Using output directory: {}'.format(config['outdir']))
     log.info('Using resources from: {}'.format(config['resources']))
@@ -126,42 +137,43 @@ def main():
           )
 
 
-    # Save collections names in another list to sort them with natsort.
-    # Save collections metadata in a list of dicts  holding all the informations that will
-    # be used by the template.
-    collections_names = []
-    collections_data = {}
-    for collection in (d.absolute() for d in config['indir'].iterdir() if d.is_dir()):
-        name = str(collection.relative_to(config['indir'])),
-        collections_names.append(name)
-        data = {
-            'name': name,
-            'path': str(Path('collections') / name),
-        }
-        collection_slides[collection['name']] = []
-        for f in (p.absolute() for p in collection.iterdir() if p.is_file()):
-            relative = f.relative_to(config['indir'])
+    # Save collections metadata in a list of dicts (collections_data)  holding all the informations that will
+    # be used by the template. This list will be (naturally) sorted by names of collection (the name of the directory
+    # containing the collection).
+    collections_data = []
+    for collection in natsorted(d.absolute() for d in config['indir'].iterdir() if d.is_dir()):
+        name = str(collection.relative_to(config['indir']))
+        metadata_file = collection / Path('metadata.ini')
+        c = configparser.ConfigParser()
+        c.read(metadata_file)
+        data = {}
+        data['name'] = name
+        data['title'] = c.get('collection', 'title', fallback=name)
+        data['uri_title'] = c.get('collection', 'uri_title',
+                                  fallback=slugify.slugify(data['title']))
+        data['path'] = str(Path('collections') / Path(data['uri_title']))
+
+        data['slides'] = []
+        for f in natsorted(f.absolute() for f in collection.iterdir() if f.is_file()):
             is_image = f.suffix.lower() in config['photo_exts']
             is_video = f.suffix.lower() in config['video_exts']
             is_media = is_image or is_video
             if is_media:
-                src = Path("collections") / relative
-                original_dest = config['outdir'] / src / Path('original')
-                n.build(str(original_dest), 'copy', inputs=str(f))
+                path = Path("collections") / Path(data['uri_title']) / Path(f.name)
                 if is_image:
-                    slide = {'type': 'photo', 'filename': str(src)}
-                    collection_slides[collection['name']].append(slide)
+                    slide = {'type': 'photo', 'path': str(path)}
+                    data['slides'].append(slide)
                     for size in config['sizes']:
-                        out = config['outdir'] / src / Path("{}px.jpg".format(size))
+                        out = config['outdir'] / path / Path("{}px.jpg".format(size))
                         n.build(str(out), 'make_thumbnails',
                                 inputs=str(f), variables={'size':size})
                 elif is_video:
-                    slide = {'type': 'video', 'filename': str(src)}
-                    collection_slides[collection['name']].append(slide)
+                    slide = {'type': 'video', 'path': str(path)}
+                    data['slides'].append(slide)
                     for codec in config['codecs']:
-                        out = Path('collections') / relative / Path('video.{}'.format(codec))
+                        out = config['outdir'] / path / Path('video.{}'.format(codec))
                         n.build(str(config['outdir'] / out), 'ffmpeg-{}'.format(codec), inputs=str(f))
-        collections.append(collection)
+        collections_data.append(data)
 
     n.close()
 
@@ -174,19 +186,19 @@ def main():
              ])
 
     template_vars = dict(user_config['template_vars'])
-    template_vars['collections'] = collections
+    template_vars['collections_data'] = collections_data
 
     index = config['outdir'] / Path('index.html')
-    template_vars['slides'] = collection_slides[collections[0]['name']]
-    template_vars['current_collection'] = collections[0]['name']
-    render_template(collections[0], index, template_vars, config['resources'])
+    initial_collection = collections_data[0]
+    template_vars['slides'] = initial_collection['slides']
+    template_vars['current_collection_path'] = initial_collection['path']
+    render_template(index, template_vars, config['resources'])
 
-    for collection in collections:
+    for collection in collections_data:
         index = config['outdir'] / collection['path'] / Path('index.html')
-        template_vars['slides'] = collection_slides[collection['name']]
-        template_vars['current_collection'] = collection['name']
-        render_template(collections[0], index, template_vars, config['resources'])
-        render_template(collection, index, template_vars, config['resources'])
+        template_vars['slides'] = collection['slides']
+        template_vars['current_collection_path'] = collection['path']
+        render_template(index, template_vars, config['resources'])
 
 
 if __name__ == '__main__':

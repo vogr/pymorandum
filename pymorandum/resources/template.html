@@ -15,11 +15,11 @@
   </div>
   <div>
     <ul>
-    {% for collection in collections %}
-    {% if collection['name'] == current_collection %}
-      <li> <a id="current" href="/{{ collection['path'] }}">{{ collection['name'] }}</a>
+    {% for collection in collections_data %}
+    {% if collection['path'] == current_collection_path %}
+      <li> <a class="current" href="/{{ collection['path'] }}">{{ collection['title'] }}</a>
     {% else %}
-      <li> <a href="/{{ collection['path'] }}">{{ collection['name'] }}</a>
+      <li> <a href="/{{ collection['path'] }}">{{ collection['title'] }}</a>
     {% endif %}
     {% endfor %}
     </ul>
@@ -41,15 +41,15 @@
             </div>
             {% endif %}
 
-            <img srcset ="/{{slide['filename'] ~ '/1920px.jpg 1920w'}}, /{{slide['filename'] ~ '/1280px.jpg 1280w'}}, /{{slide['filename'] ~ '/1024px.jpg 1024w'}}, /{{slide['filename'] ~ '/640px.jpg 640w'}}"
+            <img srcset ="/{{slide['path'] ~ '/1920px.jpg 1920w'}}, /{{slide['path'] ~ '/1280px.jpg 1280w'}}, /{{slide['path'] ~ '/1024px.jpg 1024w'}}, /{{slide['path'] ~ '/640px.jpg 640w'}}"
                  sizes="85vw"
-                 src="/{{ slide['filename'] ~ '/1280px.jpg' }}"
+                 src="/{{ slide['path'] ~ '/1280px.jpg' }}"
             />
             {% elif slide['type'] == 'video' %}
         <div class="slide video" id="slide-{{loop.index}}">
           <video muted controls loop autoplay>
-            <source src="/{{slide['filename'] ~ '/video.webm' }}" type="video/webm">
-            <source src="/{{slide['filename'] ~ '/video.mp4' }}" type="video/mp4">
+            <source src="/{{slide['path'] ~ '/video.webm' }}" type="video/webm">
+            <source src="/{{slide['path'] ~ '/video.mp4' }}" type="video/mp4">
             Your browser does not support the video tag.
           </video> 
             {% endif %}

@@ -10,6 +10,7 @@ setuptools.setup(
         'jinja2',
         'natsort',
         'ninja_syntax',
+        'python-slugify',
     ],
     entry_points={
         'console_scripts': [

@@ -28,7 +28,7 @@ aside a{
     text-decoration: none;
 }
 
-aside a#current {
+aside a.current {
     text-decoration: underline;
 }
 aside ul{
