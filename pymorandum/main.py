@@ -41,7 +41,6 @@ def main():
             default_config['template_vars'] = {
                  'gallery_title': 'My Photo Library',
                  'gallery_description': 'Que le jour recommence et que le jour finisse',
-                 'sidebar_content':'Sans que jamais Titus puisse voir Bérénice'
                 }
             with config_file.open('w') as c:
                 default_config.write(c)
@@ -118,7 +117,7 @@ def main():
            )
     n.rule(name='ffmpeg-mp4',
            command='ffmpeg -i $in \
-                    -c:v libx264 -crf 20 -preset:v veryslow \
+                    -c:v libx264 -crf 20 -preset:v slow \
                     -c:a libfdk_aac -vbr 4 \
                     -movflags +faststart \
                     $ffmpeg_options \
@@ -146,14 +145,15 @@ def main():
                 original_dest = config['outdir'] / src / Path('original')
                 n.build(str(original_dest), 'copy', inputs=str(f))
                 if is_image:
-                    photo_metadata = {'filename': str(src)}
-                    slide = {'type': 'photo', 'data': photo_metadata}
+                    slide = {'type': 'photo', 'filename': str(src)}
                     collection_slides[collection['name']].append(slide)
                     for size in config['sizes']:
                         out = config['outdir'] / src / Path("{}px.jpg".format(size))
                         n.build(str(out), 'make_thumbnails',
                                 inputs=str(f), variables={'size':size})
                 elif is_video:
+                    slide = {'type': 'video', 'filename': str(src)}
+                    collection_slides[collection['name']].append(slide)
                     for codec in config['codecs']:
                         out = Path('collections') / relative / Path('video.{}'.format(codec))
                         n.build(str(config['outdir'] / out), 'ffmpeg-{}'.format(codec), inputs=str(f))

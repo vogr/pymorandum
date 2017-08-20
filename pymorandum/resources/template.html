@@ -30,22 +30,28 @@
     {% for slide in slides %}
             {% if slide['type'] == 'text'%}
         <div class="slide text" id="slide-{{loop.index}}">
-                {{ slide['data'] }}
+                {{ slide }}
             {% elif slide['type'] == 'photo'%}
         <div class="slide photo" id="slide-{{loop.index}}">
-            {% if slide['data']['caption']%}
-            <div class="caption {% if slide['data']['caption_meta']['class']%} {{ slide['data']['caption_meta']['class'] }} {% endif %}" style="top: {{slide['data']['caption_meta']['top']}}%; left: {{slide['data']['caption_meta']['left']}}%; width: {{slide['data']['caption_meta']['width']}}%; height: {{slide['data']['caption_meta']['height']}}%; {% if slide['data']['caption_meta']['class']%} {{slide['data']['caption_meta']['style']}} {% endif %}">
-                {% if slide['data']['caption'] %}
-                    {{ slide['data']['caption'] }}
+            {% if slide['caption']%}
+            <div class="caption {% if slide['caption_meta']['class']%} {{ slide['caption_meta']['class'] }} {% endif %}" style="top: {{slide['caption_meta']['top']}}%; left: {{slide['caption_meta']['left']}}%; width: {{slide['caption_meta']['width']}}%; height: {{slide['caption_meta']['height']}}%; {% if slide['caption_meta']['class']%} {{slide['caption_meta']['style']}} {% endif %}">
+                {% if slide['caption'] %}
+                    {{ slide['caption'] }}
                 {% endif %}
             </div>
             {% endif %}
 
-            <img srcset ="/{{slide['data']['filename'] ~ '/1920px.jpg 1920w'}}, /{{slide['data']['filename'] ~ '/1280px.jpg 1280w'}}, /{{slide['data']['filename'] ~ '/1024px.jpg 1024w'}}, /{{slide['data']['filename'] ~ '/640px.jpg 640w'}}"
+            <img srcset ="/{{slide['filename'] ~ '/1920px.jpg 1920w'}}, /{{slide['filename'] ~ '/1280px.jpg 1280w'}}, /{{slide['filename'] ~ '/1024px.jpg 1024w'}}, /{{slide['filename'] ~ '/640px.jpg 640w'}}"
                  sizes="85vw"
-                 src="/{{ slide['data']['filename'] ~ '/1280px.jpg' }}"
+                 src="/{{ slide['filename'] ~ '/1280px.jpg' }}"
             />
-
+            {% elif slide['type'] == 'video' %}
+        <div class="slide video" id="slide-{{loop.index}}">
+          <video muted controls loop autoplay>
+            <source src="/{{slide['filename'] ~ '/video.webm' }}" type="video/webm">
+            <source src="/{{slide['filename'] ~ '/video.mp4' }}" type="video/mp4">
+            Your browser does not support the video tag.
+          </video> 
             {% endif %}
         </div>
     {% endfor %}
