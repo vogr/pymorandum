@@ -8,6 +8,7 @@ setuptools.setup(
     license='MIT',
     install_requires=[
         'jinja2',
+        'natsort',
         'ninja_syntax',
     ],
     entry_points={
