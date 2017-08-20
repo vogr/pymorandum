@@ -4,24 +4,24 @@
     <meta charset="UTF-8">
     <title>{{ gallery_title }}</title>
     <meta name="description" content="{{ gallery_description }}" />
-    <link href="assets/style.css" rel="stylesheet" type="text/css"/>
-    <link href="assets/fonts.css" rel="stylesheet" type="text/css"/>
+    <link href="/assets/style.css" rel="stylesheet" type="text/css"/>
+    <link href="/assets/fonts.css" rel="stylesheet" type="text/css"/>
 </head>
 
 <body>
 <aside>
-  <!--
-  <div class="branding">
-      ⁋
-  </div>
-  -->
   <div class="galery-title">
       <h1>{{ gallery_title }}</h1>
   </div>
-    {{ sidebar }}
-  <div class="actionable">
+  <div>
     <ul>
-      <li><a id="toggleFullscreen" href="#">Toggle fullscreen</a></li>
+    {% for collection in collections %}
+    {% if collection['name'] == current_collection %}
+      <li> <a id="current" href="/{{ collection['path'] }}">{{ collection['name'] }}</a>
+    {% else %}
+      <li> <a href="/{{ collection['path'] }}">{{ collection['name'] }}</a>
+    {% endif %}
+    {% endfor %}
     </ul>
   </div>
 </aside>
@@ -41,9 +41,9 @@
             </div>
             {% endif %}
 
-            <img srcset ="{{slide['data']['filename'] ~ '/1920px.jpg 1920w'}}, {{slide['data']['filename'] ~ '/1280px.jpg 1280w'}}, {{slide['data']['filename'] ~ '/1024px.jpg 1024w'}}, {{slide['data']['filename'] ~ '/640px.jpg 640w'}}"
+            <img srcset ="/{{slide['data']['filename'] ~ '/1920px.jpg 1920w'}}, /{{slide['data']['filename'] ~ '/1280px.jpg 1280w'}}, /{{slide['data']['filename'] ~ '/1024px.jpg 1024w'}}, /{{slide['data']['filename'] ~ '/640px.jpg 640w'}}"
                  sizes="85vw"
-                 src="{{ slide['data']['filename'] ~ '/1280px.jpg' }}"
+                 src="/{{ slide['data']['filename'] ~ '/1280px.jpg' }}"
             />
 
             {% endif %}
