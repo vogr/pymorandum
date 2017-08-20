@@ -1,5 +1,4 @@
 import argparse
-import hashlib
 import configparser
 import logging as log
 from pathlib import Path
