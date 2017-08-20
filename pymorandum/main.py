@@ -32,7 +32,7 @@ def main():
         if not config_file.exists():
             default_config = configparser.ConfigParser()
             default_config['general_config'] = {
-                'input_directory': '~/Pictures',
+                'input_directory': '~/Pictures/Photo Gallery',
                 'output_directory': '_site',
                 'resources_directory': 'resources',
                 'log_level': 'INFO',
