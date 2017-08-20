@@ -38,8 +38,8 @@ def init(config_file):
             'icc_profile_path': '/usr/share/color/icc/colord/sRGB.icc'
         }
         default_config['template_vars'] = {
-                'gallery_title': 'My Photo Library',
-                'gallery_description': 'Que le jour recommence et que le jour finisse',
+                'gallery_title': 'A world of wonders',
+                'gallery_description': '“We are such stuff as dreams are made on, and our little life is rounded with a sleep.”'
             }
         with config_file.open('w') as c:
             default_config.write(c)
