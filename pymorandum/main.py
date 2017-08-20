@@ -154,12 +154,9 @@ def main():
                         out = Path('media') / relative / Path('video.{}'.format(codec))
                         n.build(str(config['outdir'] / out), 'ffmpeg-{}'.format(codec), inputs=str(f))
 
-    print(slides)
     n.close()
 
     subprocess.run(['ninja'])
-
-    print("Jinja2")
 
     template_loader = jinja2.FileSystemLoader(str(config['ressources']))
     template_env = jinja2.Environment(loader=template_loader)
@@ -169,7 +166,6 @@ def main():
     template_vars['slides'] = slides
     output_text = template.render(template_vars)
     (config['outdir'] / Path('index.html')).write_text(output_text)
-    print("Done")
 
 if __name__ == '__main__':
     main()
