@@ -104,7 +104,6 @@ def main():
     n.variable('ffmpeg_options', '-threads 0')
     
     n.rule(name='copy', command='cp $in $out')
-    n.rule(name='rsync', command='rsync -aPzhu $in/ $out')
     n.rule(name='make_thumbnails',
            command='vipsthumbnail \
                     --size x$size \
@@ -127,8 +126,6 @@ def main():
                     $out'
           )
 
-    (config['ressources'] / Path('assets')).mkdir(exist_ok=True)
-    n.build(str(config['outdir'] / Path('assets')), 'rsync', inputs=str(config['ressources'] / Path('assets')))
 
     slides = []
     for collection in (d.absolute() for d in config['indir'].iterdir() if d.is_dir()):
@@ -157,6 +154,12 @@ def main():
     n.close()
 
     subprocess.run(['ninja'])
+
+    (config['ressources'] / Path('assets')).mkdir(exist_ok=True)
+    subprocess.run(['rsync', '-aPzu',
+             '{}/'.format(config['ressources'] / Path('assets')),
+             format(config['outdir'] / Path('assets'))
+             ])
 
     template_loader = jinja2.FileSystemLoader(str(config['ressources']))
     template_env = jinja2.Environment(loader=template_loader)
