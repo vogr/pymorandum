@@ -1,11 +1,13 @@
 import argparse
 import configparser
 import logging as log
+import operator
 from pathlib import Path
 import subprocess
 import sys
 
 import pkg_resources
+from natsort import natsorted
 import ninja_syntax
 import jinja2
 
@@ -124,17 +126,20 @@ def main():
           )
 
 
-    # Save collections in a list of  holding all the informations that will
+    # Save collections names in another list to sort them with natsort.
+    # Save collections metadata in a list of dicts  holding all the informations that will
     # be used by the template.
-    collections = []
-    collection_slides = {}
-    for collection_dir in (d.absolute() for d in config['indir'].iterdir() if d.is_dir()):
-        collection = {
-            'name': str(collection_dir.relative_to(config['indir'])),
-            'path': str(Path('collections') / collection_dir.relative_to(config['indir'])),
+    collections_names = []
+    collections_data = {}
+    for collection in (d.absolute() for d in config['indir'].iterdir() if d.is_dir()):
+        name = str(collection.relative_to(config['indir'])),
+        collections_names.append(name)
+        data = {
+            'name': name,
+            'path': str(Path('collections') / name),
         }
         collection_slides[collection['name']] = []
-        for f in (p.absolute() for p in collection_dir.iterdir() if p.is_file()):
+        for f in (p.absolute() for p in collection.iterdir() if p.is_file()):
             relative = f.relative_to(config['indir'])
             is_image = f.suffix.lower() in config['photo_exts']
             is_video = f.suffix.lower() in config['video_exts']

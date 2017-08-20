@@ -9,3 +9,5 @@ git clone git https://gitlab.com/vogier/pymorandum
 cd pymorandum
 python3 -m pip install .
 ```
+
+## Usage
