@@ -33,6 +33,7 @@ def init(config_file):
         default_config['general_config'] = {
             'input_directory': '~/Pictures/Photo Gallery',
             'output_directory': '_site',
+            'base_url': '',
             'resources_directory': 'resources',
             'log_level': 'INFO',
             'icc_profile_path': '/usr/share/color/icc/colord/sRGB.icc'
@@ -84,20 +85,25 @@ def main():
     config = {}
     config['indir'] = Path(general_config["input_directory"]).expanduser().absolute()
     config['outdir'] = Path(general_config["output_directory"]).expanduser().absolute()
+    # Careful! if defined, base_url begins with a leading slash
+    config['base_url'] = Path('/') / general_config["base_url"]
+    
     config['resources'] = Path(general_config["resources_directory"]).expanduser().absolute()
     log.info('Using input directory: {}'.format(config['indir']))
     if not config['indir'].exists():
-        raise Exception("Directory {} doesn't exist".format(config['indir']))
+        raise Exception("Directory {} doesn't exist, use --init to create it with default values.".format(config['indir']))
+    if not config['resources'].exists():
+        raise Exception("Directory {} doesn't exist, use --init to use default resources.".format(config['resources']))
 
     log.info('Using output directory: {}'.format(config['outdir']))
     log.info('Using resources from: {}'.format(config['resources']))
     
     config['ninjafile'] = Path('build.ninja').absolute()
-    config['icc_profile'] = Path(general_config['icc_profile_path']).absolute()
+    config['icc_profile'] = Path(general_config['icc_profile_path']).expanduser().absolute()
 
     config['photo_exts'] = set(['.jpg', '.jpeg', '.png'])
     config['sizes'] = ['1920', '1280', '1024', '640', '320']
-    config['video_exts'] = set(['.mov', '.avi', '.mts'])
+    config['video_exts'] = set(['.mov', '.avi', '.mts', '.vid', '.mp4'])
     config['codecs'] = ['webm', 'mp4']
     #mp4: h264, aac
     #webm: vp8, vorbis
@@ -111,7 +117,7 @@ def main():
     n = ninja_syntax.Writer(config['ninjafile'].open('w', encoding='utf-8'))
     #n.variable('builddir', str(config['outdir']))
     n.variable('vips_options', ' '.join(config['vips_options']))
-    n.variable('ffmpeg_options', '-threads 0')
+    n.variable('ffmpeg_options', '-y -threads 0')
     
     n.rule(name='copy', command='cp $in $out')
     n.rule(name='make_thumbnails',
@@ -123,13 +129,14 @@ def main():
            )
     n.rule(name='ffmpeg-webm',
            command='ffmpeg -i $in \
-                    -c:v libvpx -b:v 1M -crf 30 \
+                    -c:v libvpx -b:v 2M -crf 15 \
                     -c:a libvorbis -q:a 4 \
+                    $ffmpeg_options \
                     $out'
            )
     n.rule(name='ffmpeg-mp4',
            command='ffmpeg -i $in \
-                    -c:v libx264 -crf 20 -preset:v slow \
+                    -c:v libx264 -crf 15 -preset:v slow \
                     -c:a libfdk_aac -vbr 4 \
                     -movflags +faststart \
                     $ffmpeg_options \
@@ -151,7 +158,10 @@ def main():
         data['title'] = c.get('collection', 'title', fallback=name)
         data['uri_title'] = c.get('collection', 'uri_title',
                                   fallback=slugify.slugify(data['title']))
-        data['path'] = str(Path('collections') / Path(data['uri_title']))
+        data['path'] = Path('collections') / Path(data['uri_title'])
+        data['src_uri'] = str(config['base_url'] / data['path'])
+        if data['src_uri'][-1] != '/':
+            data['src_uri'] += '/'
 
         data['slides'] = []
         for f in natsorted((f.absolute() for f in collection.iterdir() if f.is_file()), key=str):
@@ -160,15 +170,16 @@ def main():
             is_media = is_image or is_video
             if is_media:
                 path = Path("collections") / Path(data['uri_title']) / Path(f.name)
+                src_uri = str(config['base_url'] / path)
                 if is_image:
-                    slide = {'type': 'photo', 'path': str(path)}
+                    slide = {'type': 'photo', 'path': path, 'src_uri': src_uri}
                     data['slides'].append(slide)
                     for size in config['sizes']:
                         out = config['outdir'] / path / Path("{}px.jpg".format(size))
                         n.build(str(out), 'make_thumbnails',
                                 inputs=str(f), variables={'size':size})
                 elif is_video:
-                    slide = {'type': 'video', 'path': str(path)}
+                    slide = {'type': 'video', 'path': path, 'src_uri': src_uri}
                     data['slides'].append(slide)
                     for codec in config['codecs']:
                         out = config['outdir'] / path / Path('video.{}'.format(codec))
@@ -187,17 +198,21 @@ def main():
 
     template_vars = dict(user_config['template_vars'])
     template_vars['collections_data'] = collections_data
+    template_vars['base_url'] = str(config['base_url'])
+    # Careful! In the template, base_url comes with leading AND trailing slash!
+    if template_vars['base_url'][-1] != '/':
+        template_vars['base_url'] += '/'
 
     index = config['outdir'] / Path('index.html')
     initial_collection = collections_data[0]
     template_vars['slides'] = initial_collection['slides']
-    template_vars['current_collection_path'] = initial_collection['path']
+    template_vars['current_collection_uri'] = initial_collection['src_uri']
     render_template(index, template_vars, config['resources'])
 
     for collection in collections_data:
         index = config['outdir'] / collection['path'] / Path('index.html')
         template_vars['slides'] = collection['slides']
-        template_vars['current_collection_path'] = collection['path']
+        template_vars['current_collection_uri'] = collection['src_uri']
         render_template(index, template_vars, config['resources'])
 
 

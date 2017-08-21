@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <title>{{ gallery_title }}</title>
     <meta name="description" content="{{ gallery_description }}" />
-    <link href="/assets/style.css" rel="stylesheet" type="text/css"/>
-    <link href="/assets/fonts.css" rel="stylesheet" type="text/css"/>
+    <link href="{{ base_url ~ 'assets/style.css'}}" rel="stylesheet" type="text/css"/>
+    <link href="{{ base_url ~ 'assets/fonts.css' }}" rel="stylesheet" type="text/css"/>
 </head>
 
 <body>
@@ -16,10 +16,10 @@
   <div>
     <ul>
     {% for collection in collections_data %}
-    {% if collection['path'] == current_collection_path %}
-      <li> <a class="current" href="/{{ collection['path'] }}">{{ collection['title'] }}</a>
+    {% if collection['src_uri'] == current_collection_uri %}
+      <li> <a class="current" href="{{ collection['src_uri'] }}">{{ collection['title'] }}</a>
     {% else %}
-      <li> <a href="/{{ collection['path'] }}">{{ collection['title'] }}</a>
+      <li> <a href="{{ collection['src_uri'] }}">{{ collection['title'] }}</a>
     {% endif %}
     {% endfor %}
     </ul>
@@ -41,15 +41,15 @@
             </div>
             {% endif %}
 
-            <img srcset ="/{{slide['path'] ~ '/1920px.jpg 1920w'}}, /{{slide['path'] ~ '/1280px.jpg 1280w'}}, /{{slide['path'] ~ '/1024px.jpg 1024w'}}, /{{slide['path'] ~ '/640px.jpg 640w'}}"
+            <img srcset ="{{slide['src_uri'] ~ '/1920px.jpg 1920w'}}, {{slide['src_uri'] ~ '/1280px.jpg 1280w'}}, {{slide['src_uri'] ~ '/1024px.jpg 1024w'}}, {{slide['src_uri'] ~ '/640px.jpg 640w'}}"
                  sizes="85vw"
-                 src="/{{ slide['path'] ~ '/1280px.jpg' }}"
+                 src="{{ slide['src_uri'] ~ '/1280px.jpg' }}"
             />
             {% elif slide['type'] == 'video' %}
         <div class="slide video" id="slide-{{loop.index}}">
           <video muted controls loop autoplay>
-            <source src="/{{slide['path'] ~ '/video.webm' }}" type="video/webm">
-            <source src="/{{slide['path'] ~ '/video.mp4' }}" type="video/mp4">
+            <source src="{{slide['src_uri'] ~ '/video.webm' }}" type="video/webm">
+            <source src="{{slide['src_uri'] ~ '/video.mp4' }}" type="video/mp4">
             Your browser does not support the video tag.
           </video> 
             {% endif %}
