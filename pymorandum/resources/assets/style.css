@@ -1,4 +1,9 @@
 @charset "utf-8";
+
+html {
+  font-size: 100%;
+}
+
 body {
     font-family: "LatoWeb";
     font-size: 9pt;
@@ -36,6 +41,19 @@ aside ul{
 }
 aside ul li{
     margin-bottom: 0.33em
+}
+
+aside .actions ul {
+position:fixed;
+bottom:0;
+list-style:none;
+font-size:1vw;
+margin-left:1vw;
+padding:.5vw;
+}
+
+aside .actions ul a {
+color:#e8e8e8;
 }
 
 article {

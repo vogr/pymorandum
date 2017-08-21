@@ -5,6 +5,7 @@ import operator
 from pathlib import Path
 import subprocess
 import sys
+import zipfile
 
 import pkg_resources
 from natsort import natsorted
@@ -17,6 +18,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--init', action='store_true')
     return parser.parse_args()
+
 
 def render_template(outfile, template_vars, template_dir):
     template_loader = jinja2.FileSystemLoader(str(template_dir))
@@ -36,7 +38,8 @@ def init(config_file):
             'base_url': '',
             'resources_directory': 'resources',
             'log_level': 'INFO',
-            'icc_profile_path': '/usr/share/color/icc/colord/sRGB.icc'
+            'icc_profile_path': '/usr/share/color/icc/colord/sRGB.icc',
+            'downloadable_zipfiles': 'true',
         }
         default_config['template_vars'] = {
                 'gallery_title': 'A world of wonders',
@@ -100,6 +103,8 @@ def main():
     
     config['ninjafile'] = Path('build.ninja').absolute()
     config['icc_profile'] = Path(general_config['icc_profile_path']).expanduser().absolute()
+    config['downloadable'] = general_config.getboolean('downloadable_zipfiles')
+    config['to_exclude'] = ['metadata.in']
 
     config['photo_exts'] = set(['.jpg', '.jpeg', '.png'])
     config['sizes'] = ['1920', '1280', '1024', '640', '320']
@@ -142,6 +147,7 @@ def main():
                     $ffmpeg_options \
                     $out'
           )
+    n.rule(name='zip', command='zip -j $out $in')
 
 
     # Save collections metadata in a list of dicts (collections_data)  holding all the informations that will
@@ -163,13 +169,15 @@ def main():
         if data['src_uri'][-1] != '/':
             data['src_uri'] += '/'
 
+        collection_out = (config['outdir'] / Path("collections") / Path(data['uri_title'])).absolute()
+
         data['slides'] = []
         for f in natsorted((f.absolute() for f in collection.iterdir() if f.is_file()), key=str):
             is_image = f.suffix.lower() in config['photo_exts']
             is_video = f.suffix.lower() in config['video_exts']
             is_media = is_image or is_video
             if is_media:
-                path = Path("collections") / Path(data['uri_title']) / Path(f.name)
+                path = collection_out.relative_to(config['outdir']) / Path(f.name)
                 src_uri = str(config['base_url'] / path)
                 if is_image:
                     slide = {'type': 'photo', 'path': path, 'src_uri': src_uri}
@@ -185,6 +193,10 @@ def main():
                         out = config['outdir'] / path / Path('video.{}'.format(codec))
                         n.build(str(config['outdir'] / out), 'ffmpeg-{}'.format(codec), inputs=str(f))
         collections_data.append(data)
+        if config['downloadable']:
+            archive = (collection_out / Path('archive.zip')).absolute()
+            to_zip = [str(f.absolute()) for f in collection.iterdir() if f.name not in config['to_exclude']]
+            n.build(str(archive), 'zip', to_zip)
 
     n.close()
 
@@ -198,6 +210,7 @@ def main():
 
     template_vars = dict(user_config['template_vars'])
     template_vars['collections_data'] = collections_data
+    template_vars['downloadable'] = config['downloadable']
     template_vars['base_url'] = str(config['base_url'])
     # Careful! In the template, base_url comes with leading AND trailing slash!
     if template_vars['base_url'][-1] != '/':

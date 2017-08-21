@@ -24,6 +24,12 @@
     {% endfor %}
     </ul>
   </div>
+  <div class='actions'>
+    <ul>
+    {% if downloadable %}
+      <li> <a href={{ current_collection_uri ~ 'archive.zip' }}>Download collection</a>
+    {% endif %}
+    </ul>
 </aside>
 
 <article>
