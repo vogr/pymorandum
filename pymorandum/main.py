@@ -141,7 +141,7 @@ def main():
     # be used by the template. This list will be (naturally) sorted by names of collection (the name of the directory
     # containing the collection).
     collections_data = []
-    for collection in natsorted(d.absolute() for d in config['indir'].iterdir() if d.is_dir()):
+    for collection in natsorted((d.absolute() for d in config['indir'].iterdir() if d.is_dir()), key=str):
         name = str(collection.relative_to(config['indir']))
         metadata_file = collection / Path('metadata.ini')
         c = configparser.ConfigParser()
@@ -154,7 +154,7 @@ def main():
         data['path'] = str(Path('collections') / Path(data['uri_title']))
 
         data['slides'] = []
-        for f in natsorted(f.absolute() for f in collection.iterdir() if f.is_file()):
+        for f in natsorted((f.absolute() for f in collection.iterdir() if f.is_file()), key=str):
             is_image = f.suffix.lower() in config['photo_exts']
             is_video = f.suffix.lower() in config['video_exts']
             is_media = is_image or is_video
