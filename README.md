@@ -7,12 +7,14 @@ Visit a [live example][example] now to see what the output looks like, and see b
 
 Features include:
 * Photo and video support
-* Easy pages customization using Jinja2 templates.
+* Easy pages customization using Jinja2 templates
 * Responsive images size
 * Incremental generation (only generate thumbnails for new photos)
+* Fast!
 
 Pymorandum's speed stems from its usage of the [ninja build system][ninja] together with the superfast image thumbnailer [`vipsthumbnail`][vipsthumbnail].
 
+This project was greatly inspired by [Jack000's Exposé][expose] and [PetitPrince's pyxpose][pyxpose] from which I even recycled bits of code (thanks to the generous MIT license).
 
 [gitlab-pages]: https://about.gitlab.com/features/pages/
 [example]: https://vogier.gitlab.io/pymorandum-gallery
@@ -20,22 +22,23 @@ Pymorandum's speed stems from its usage of the [ninja build system][ninja] toget
 [ninja]: https://ninja-build.org/
 [pixabay]: https://pixabay.com
 [vipsthumbnail]: https://jcupitt.github.io/libvips/API/current/Using-vipsthumbnail.md.html
-
+[expose]: https://github.com/Jack000/expose
+[pyxpose]: https://github.com/PetitPrince/pyxpose
 ## Installation
 
 ### Dependencies
-Pymorandum delegates intensive work to powerful allies. To this end it must call `ninja`, `vipsthumbnail` and `ffmpeg`. 
+Pymorandum delegates intensive work to powerful allies. To this end it must call `ninja`, `rsync`, `vipsthumbnail` and `ffmpeg`. 
 
 #### Fedora
 (Note: you will need a version of ffmpeg shipping with libfdk_aac. You can get one by enabling [negativo17's multimedia repository][multimedia]: `dnf config-manager --add-repo=https://negativo17.org/repos/fedora-multimedia.repo`)
 ```
-sudo dnf install ninja-build vips-tools ffmpeg
+sudo dnf install ninja-build rsync vips-tools ffmpeg
 ```
 
 [multimedia]: https://negativo17.org/handbrake/
 #### Debian/Ubuntu
 ```
-sudo apt-get install ninja-build libvips-tools ffmpeg
+sudo apt-get install ninja-build rsync libvips-tools ffmpeg
 ```
 ### Pymorandum
 ```
@@ -52,7 +55,7 @@ If you do not wish to install pymorandum, you may run it directly using `python3
 
 ## Usage
 
-Create a directory where pymorandum will do its work, and simply run `pymorandum --init` to get started
+Create a directory where pymorandum will do its work, and simply run `pymorandum --init` to get started.
 
 ```
 mkdir 'Photo Gallery'
@@ -66,7 +69,7 @@ You should modify `config.ini` to your needs. Here is a quick description of the
 * `input_directory`: the directory where pymorandum will look for your collections. A collection is a directory containing photos or videos. For each collection, pymorandum will create a page accessible from the sidebar on the website.
 * `output_directory`: the directory where pymorandum will generate the website.
 * `resources_directory`: pymorandum will look for a template named `template.html` in this folder. The `assets` folder in the resources directory will simply be copied to the `output_directory`.
-* `log_level`: the level of warnings to get (advised: leave `INFO`)
+* `log_level`: the level of warnings to get (advised: leave `INFO`).
 * `icc_profile_path`: the ICC profile used by `vipsthumbnail` during the thumbnail generation. Ideally this should link to a valid sRGB.icc profile. If in doubt, there is no need to modify it.
 * All variables in the category `templates_vars` will be passed to jinja2 when rendering the template.
 
