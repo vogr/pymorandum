@@ -71,6 +71,7 @@ You should modify `config.ini` to your needs. Here is a quick description of the
 * `resources_directory`: pymorandum will look for a template named `template.html` in this folder. The `assets` folder in the resources directory will simply be copied to the `output_directory`.
 * `log_level`: the level of warnings to get (advised: leave `INFO`).
 * `icc_profile_path`: the ICC profile used by `vipsthumbnail` during the thumbnail generation. Ideally this should link to a valid sRGB.icc profile. If in doubt, there is no need to modify it.
+* `downloadable_zipfiles`: for a each collection, show a download button for a zip archive containing the collection. WARNING: all files in the collection will end in the archive, not just photos and videos!
 * All variables in the category `templates_vars` will be passed to jinja2 when rendering the template.
 
 > Tip: You may use `~` in any variable to denote `/home/your_user`.
