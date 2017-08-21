@@ -40,7 +40,7 @@ def init(config_file):
         }
         default_config['template_vars'] = {
                 'gallery_title': 'A world of wonders',
-                'gallery_description': '“We are such stuff as dreams are made on, and our little life is rounded with a sleep.”'
+                'gallery_description': 'We are such stuff as dreams are made on, and our little life is rounded with a sleep.'
             }
         with config_file.open('w') as c:
             default_config.write(c)
