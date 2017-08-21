@@ -45,8 +45,8 @@ python3 -m pip install .
 ```
 > Tip: run `python3 -m pip --user install .` instead to install it to your home directory. In this case you should also add `~/.local/bin` to your `$PATH` if it is not already in it.
 > To do this automatically on every install create the file `~/.config/pip/pip.conf` with the content<br>
-    [global]<br>
-    user = 1
+    `[global]`<br>
+    `user = 1`
 
 If you do not wish to install pymorandum, you may run it directly using `python3 pymorandum/main.py`. In this case you will need to manually install other dependencies: `python3 -m pip install setuptools natsort ninja_syntax jinja2 slugify`.
 
