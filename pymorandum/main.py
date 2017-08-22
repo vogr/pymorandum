@@ -33,9 +33,9 @@ def init(config_file):
     if not config_file.exists():
         default_config = configparser.ConfigParser()
         default_config['general_config'] = {
+            'base_url': '',
             'input_directory': '~/Pictures/Photo Gallery',
             'output_directory': '_site',
-            'base_url': '',
             'resources_directory': 'resources',
             'log_level': 'INFO',
             'icc_profile_path': '/usr/share/color/icc/colord/sRGB.icc',
