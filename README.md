@@ -48,7 +48,7 @@ python3 -m pip install .
 ```
 > Tip: run `python3 -m pip --user install .` instead to install it to your home directory. In this case you should also add `~/.local/bin` to your `$PATH` if it is not already in it.
 > To do this automatically on every install create the file `~/.config/pip/pip.conf` with the content
->```INI
+>```ini
 [global]
 user = 1
 ```
@@ -83,7 +83,7 @@ Once you're happy with your config file, simply run `pymorandum` and you'll quic
 > Tip: to preview yout website, you can use python's built in webserver. Simply run `cd _site; python3 -m http.server 8000` (this will not work if you have specified a `base_url`).
 >
 > When dealing with a `base_url`, I personnaly use [Caddy server][caddy] with the following `Caddyfile` (replace `base_url` accordingly):
-> ```Nginx
+> ```
 https://localhost:2015/base_url/ {
     tls self_signed
     root _site/
@@ -103,7 +103,7 @@ https://localhost:2015/base_url/ {
 Pymorandum will respect the alphabetical order of files and folders when generating the gallery, you may therefore precede any file or directory name by a number to organise your gallery (no need for leading zeroes, the order 1, 2, 3, ..., 10, 11, 12 works as expected!).
 
 By default a collection's name will be the name of the directory. You may modify it by placing a `metadata.ini` file in the corresponding directory with the following content:
-```INI
+```ini
 [collection]
 title = Your new title
 uri_title = your_title   # (Optional) This title will be used in the collection's uri: yoursite.com/collections/your_title
