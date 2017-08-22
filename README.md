@@ -31,24 +31,24 @@ Pymorandum delegates intensive work to powerful allies. To this end it must call
 
 #### Fedora
 (Note: you will need a version of ffmpeg shipping with libfdk_aac. You can get one by enabling [negativo17's multimedia repository][multimedia]: `dnf config-manager --add-repo=https://negativo17.org/repos/fedora-multimedia.repo`)
-```
+```bash
 sudo dnf install ninja-build rsync vips-tools ffmpeg
 ```
 
 [multimedia]: https://negativo17.org/handbrake/
 #### Debian/Ubuntu
-```
+```bash
 sudo apt-get install ninja-build rsync libvips-tools ffmpeg
 ```
 ### Pymorandum
-```
+```bash
 git clone https://gitlab.com/vogier/pymorandum
 cd pymorandum
 python3 -m pip install .
 ```
 > Tip: run `python3 -m pip --user install .` instead to install it to your home directory. In this case you should also add `~/.local/bin` to your `$PATH` if it is not already in it.
 > To do this automatically on every install create the file `~/.config/pip/pip.conf` with the content
->```
+>```INI
 [global]
 user = 1
 ```
@@ -59,7 +59,7 @@ If you do not wish to install pymorandum, you may run it directly using `python3
 
 Create a directory where pymorandum will do its work, and simply run `pymorandum --init` to get started.
 
-```
+``` bash
 mkdir 'Photo Gallery'
 cd 'Photo Gallery'
 pymorandum --init
@@ -83,7 +83,7 @@ Once you're happy with your config file, simply run `pymorandum` and you'll quic
 > Tip: to preview yout website, you can use python's built in webserver. Simply run `cd _site; python3 -m http.server 8000` (this will not work if you have specified a `base_url`).
 >
 > When dealing with a `base_url`, I personnaly use [Caddy server][caddy] with the following `Caddyfile` (replace `base_url` accordingly):
-> ```
+> ```Nginx
 https://localhost:2015/base_url/ {
     tls self_signed
     root _site/
@@ -103,7 +103,7 @@ https://localhost:2015/base_url/ {
 Pymorandum will respect the alphabetical order of files and folders when generating the gallery, you may therefore precede any file or directory name by a number to organise your gallery (no need for leading zeroes, the order 1, 2, 3, ..., 10, 11, 12 works as expected!).
 
 By default a collection's name will be the name of the directory. You may modify it by placing a `metadata.ini` file in the corresponding directory with the following content:
-```
+```INI
 [collection]
 title = Your new title
 uri_title = your_title   # (Optional) This title will be used in the collection's uri: yoursite.com/collections/your_title
