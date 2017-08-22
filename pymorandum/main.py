@@ -104,7 +104,7 @@ def main():
     config['ninjafile'] = Path('build.ninja').absolute()
     config['icc_profile'] = Path(general_config['icc_profile_path']).expanduser().absolute()
     config['downloadable'] = general_config.getboolean('downloadable_zipfiles')
-    config['to_exclude'] = ['metadata.in']
+    config['to_exclude'] = ['metadata.ini']
 
     config['photo_exts'] = set(['.jpg', '.jpeg', '.png'])
     config['sizes'] = ['1920', '1280', '1024', '640', '320']
@@ -134,14 +134,15 @@ def main():
            )
     n.rule(name='ffmpeg-webm',
            command='ffmpeg -i $in \
-                    -c:v libvpx -b:v 2M -crf 15 \
+                    -c:v libvpx -b:v 2M -crf 10 \
+                    -qmin 0 -qmax 50 \
                     -c:a libvorbis -q:a 4 \
                     $ffmpeg_options \
                     $out'
            )
     n.rule(name='ffmpeg-mp4',
            command='ffmpeg -i $in \
-                    -c:v libx264 -crf 15 -preset:v slow \
+                    -c:v libx264 -crf 18 -preset:v fast \
                     -c:a libfdk_aac -vbr 4 \
                     -movflags +faststart \
                     $ffmpeg_options \
