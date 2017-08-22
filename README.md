@@ -74,7 +74,7 @@ You should modify `config.ini` to your needs. Here is a quick description of the
 * `downloadable_zipfiles`: for a each collection, show a download button for a zip archive containing the collection. WARNING: all files in the collection will end in the archive, not just photos and videos!
 * All variables in the category `templates_vars` will be passed to jinja2 when rendering the template.
 
-> Tip: You may use `~` in any variable to denote `/home/your_user`.
+> Tip: You may use `~` in any path variable to denote `/home/your_user`.
 
 Once you're happy with your config file, simply run `pymorandum` and you'll quickly get all the necessary files in `output_dir`.
 
