@@ -1,11 +1,9 @@
 import argparse
 import configparser
 import logging as log
-import operator
 from pathlib import Path
 import subprocess
 import sys
-import zipfile
 
 import pkg_resources
 from natsort import natsorted
@@ -47,22 +45,22 @@ def init(config_file):
             }
         with config_file.open('w') as c:
             default_config.write(c)
-        log.warn("Config file has been written to {}".format(config_file))
+        log.warning("Config file has been written to %s", config_file)
     else:
-        log.warn("Config file already exists, it will not be modified.")
+        log.warning("Config file already exists, it will not be modified.")
     user_config = configparser.ConfigParser()
     user_config.read(config_file)
     package_resources = Path(pkg_resources.resource_filename(__name__, "resources")).absolute()
     user_resources = Path(user_config['general_config']['resources_directory']).absolute()
     if not user_resources.exists():
-        log.warn("Copying resources to {}".format(user_resources))
+        log.warning("Copying resources to %s", user_resources)
         subprocess.run(['rsync', '-aPzh',
                         "{}/".format(package_resources),
                         user_resources
                     ])
-        log.warn("Exiting.")
+        log.warning("Exiting.")
     else:
-        log.warn("Resources directory already exists at {}, aborting.".format(user_resources))
+        log.warning("Resources directory already exists at %s, aborting.", user_resources)
     sys.exit()
 
 def main():
@@ -73,8 +71,8 @@ def main():
         init(config_file)
 
     if not config_file.exists():
-        log.warn("Config file doesn't exist yet, aborting.")
-        log.warn("If you would like to write the default config and templates, use --init.")
+        log.warning("Config file doesn't exist yet, aborting.")
+        log.warning("If you would like to write the default config and templates, use --init.")
         raise FileNotFoundError("{}".format(config_file))
 
 
@@ -83,7 +81,7 @@ def main():
     general_config = user_config['general_config']
 
     log.basicConfig(level=getattr(log, general_config['log_level']))
-    log.info("Reading config from {}".format(config_file))
+    log.info("Reading config from %s", config_file)
 
     config = {}
     config['indir'] = Path(general_config["input_directory"]).expanduser().absolute()
@@ -92,14 +90,14 @@ def main():
     config['base_url'] = Path('/') / general_config["base_url"]
     
     config['resources'] = Path(general_config["resources_directory"]).expanduser().absolute()
-    log.info('Using input directory: {}'.format(config['indir']))
+    log.info('Using input directory: %s', config['indir'])
     if not config['indir'].exists():
         raise Exception("Directory {} doesn't exist, use --init to create it with default values.".format(config['indir']))
     if not config['resources'].exists():
         raise Exception("Directory {} doesn't exist, use --init to use default resources.".format(config['resources']))
 
-    log.info('Using output directory: {}'.format(config['outdir']))
-    log.info('Using resources from: {}'.format(config['resources']))
+    log.info('Using output directory: %s', config['outdir'])
+    log.info('Using resources from: %s', config['resources'])
     
     config['ninjafile'] = Path('build.ninja').absolute()
     config['icc_profile'] = Path(general_config['icc_profile_path']).expanduser().absolute()
