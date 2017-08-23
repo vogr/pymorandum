@@ -122,7 +122,6 @@ def main():
     n.variable('vips_options', ' '.join(config['vips_options']))
     n.variable('ffmpeg_options', '-y -threads 0')
     
-    n.rule(name='copy', command='cp $in $out')
     n.rule(name='make_thumbnails',
            command='vipsthumbnail \
                     --size x$size \
@@ -146,6 +145,8 @@ def main():
                     $ffmpeg_options \
                     $out'
           )
+    n.rule(name='rsync',
+           command='rsync -aPzh --delete $in/ $out')
     n.rule(name='zip', command='zip -j $out $in')
 
 
@@ -197,15 +198,15 @@ def main():
             to_zip = [str(f.absolute()) for f in collection.iterdir() if f.name not in config['to_exclude']]
             n.build(str(archive), 'zip', to_zip)
 
-    n.close()
 
-    subprocess.run(['ninja'])
 
     (config['resources'] / Path('assets')).mkdir(exist_ok=True)
-    subprocess.run(['rsync', '-aPzu',
-             '{}/'.format(config['resources'] / Path('assets')),
-             format(config['outdir'] / Path('assets'))
-             ])
+    n.build(str(config['outdir'] / Path('assets')),
+            'rsync',
+            str(config['resources'] / Path('assets')))
+
+    n.close()
+    subprocess.run(['ninja'])
 
     template_vars = dict(user_config['template_vars'])
     template_vars['collections_data'] = collections_data
