@@ -194,7 +194,7 @@ def main():
                         n.build(str(config['outdir'] / out), 'ffmpeg-{}'.format(codec), inputs=str(f))
         collections_data.append(data)
         if config['downloadable']:
-            archive = (collection_out / Path('archive.zip')).absolute()
+            archive = (collection_out / Path('{}.zip'.format(data['uri_title']))).absolute()
             to_zip = [str(f.absolute()) for f in collection.iterdir() if f.name not in config['to_exclude']]
             n.build(str(archive), 'zip', to_zip)
 
@@ -219,13 +219,13 @@ def main():
     index = config['outdir'] / Path('index.html')
     initial_collection = collections_data[0]
     template_vars['slides'] = initial_collection['slides']
-    template_vars['current_collection_uri'] = initial_collection['src_uri']
+    template_vars['current_collection'] = initial_collection
     render_template(index, template_vars, config['resources'])
 
     for collection in collections_data:
         index = config['outdir'] / collection['path'] / Path('index.html')
         template_vars['slides'] = collection['slides']
-        template_vars['current_collection_uri'] = collection['src_uri']
+        template_vars['current_collection'] = collection
         render_template(index, template_vars, config['resources'])
 
 
