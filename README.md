@@ -27,7 +27,7 @@ This project was greatly inspired by [Jack000's Exposé][expose] and [PetitPrinc
 ## Installation
 
 ### Dependencies
-Pymorandum delegates intensive work to powerful allies. To this end it must call `ninja`, `rsync`, `vipsthumbnail` and `ffmpeg`.
+Pymorandum delegates intensive work to powerful allies. To this end it must call `ninja`, `rsync`, `vipsthumbnail`, `ffmpeg` and `zip`.
 
 #### Fedora
 (Note: you will need a version of ffmpeg shipping with libfdk_aac. You can get one by enabling [negativo17's multimedia repository][multimedia]: `dnf config-manager --add-repo=https://negativo17.org/repos/fedora-multimedia.repo`)
@@ -40,6 +40,12 @@ sudo dnf install ninja-build rsync vips-tools ffmpeg
 ```bash
 sudo apt-get install ninja-build rsync libvips-tools ffmpeg
 ```
+
+#### Windows
+It should work too! Simply install the previously listed dependencies and make sure they can be called from the command-line (ie they must be [added to your System PATH][PATH]). (WARNING: Untested!)
+
+[PATH]: https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/
+
 ### Pymorandum
 ```bash
 git clone https://gitlab.com/vogier/pymorandum
