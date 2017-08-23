@@ -1,1 +1,1 @@
-from pymorandum.main import main
+from .main import main
