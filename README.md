@@ -71,7 +71,7 @@ cd 'Photo Gallery'
 pymorandum --init
 ```
 
-You directory will now contain the file `config.ini` and the folder `resources`.
+Your directory will now contain the file `config.ini` and the folder `resources`.
 You should modify `config.ini` to your needs. Here is a quick description of the different variables:
 * `base_url`: if your photo gallery is hosted at `yoursite.com`, leave it blank, else if it lives at `yoursite.com/photo-gallery` change it to `photo-gallery`. On GitLab Pages, it should correspong to your chosen `baseurl` (by default the project name). (Note: leading and trailing slashes are ignored.)
 * `input_directory`: the directory where pymorandum will look for your collections. A collection is a directory containing photos or videos. For each collection, pymorandum will create a page accessible from the sidebar on the website.
@@ -112,5 +112,5 @@ By default a collection's name will be the name of the directory. You may modify
 ```ini
 [collection]
 title = Your new title
-uri_title = your_title   # (Optional) This title will be used in the collection's uri: yoursite.com/collections/your_title
+uri_title = your_title   # (Optional) This title will be used in the collection's URI: yoursite.com/collections/uri_title
 ```
