@@ -32,13 +32,13 @@ Pymorandum delegates intensive work to powerful allies. To this end it must call
 #### Fedora
 (Note: you will need a version of ffmpeg shipping with libfdk_aac. You can get one by enabling [negativo17's multimedia repository][multimedia]: `dnf config-manager --add-repo=https://negativo17.org/repos/fedora-multimedia.repo`)
 ```bash
-sudo dnf install ninja-build rsync vips-tools ffmpeg
+sudo dnf install ninja-build rsync vips-tools ffmpeg zip
 ```
 
 [multimedia]: https://negativo17.org/handbrake/
 #### Debian/Ubuntu
 ```bash
-sudo apt-get install ninja-build rsync libvips-tools ffmpeg
+sudo apt-get install ninja-build rsync libvips-tools ffmpeg zip
 ```
 
 #### Windows
