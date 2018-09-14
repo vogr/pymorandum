@@ -63,11 +63,13 @@ body {
 #collection {
   grid-area: "collection";
   display: flex;
-  flex-direction: column;
+  flex-flow: row wrap;
+  justify-content: center;
 }
 
 img, video {
-  width: 100%;
+  max-width: 100%;
+  max-height: 101vh;
   vertical-align:top;
 }
 
