@@ -28,7 +28,7 @@
     <div class='actions'>
       <ul>
       {% if downloadable %}
-        <li> <a href={{ current_collection['src_uri'] ~ current_collection['uri_title'] ~ '.zip' }}>
+        <li> <a download href={{ current_collection['src_uri'] ~ current_collection['uri_title'] ~ '.zip' }}>
           <svg class="feather">
             <use xlink:href="{{ base_url ~ 'assets/icons/feather-sprite.svg#download' }}"/>
           </svg> Download collection</a>
