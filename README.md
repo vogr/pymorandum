@@ -90,17 +90,17 @@ Once you're happy with your config file, simply run `pymorandum` and you'll quic
 >
 > When dealing with a `base_url`, I personnaly use [Caddy server][caddy] with the following `Caddyfile` (replace `base_url` accordingly):
 > ```
-https://localhost:2015/base_url/ {
-    tls self_signed
-    root _site/
-    header / {
-        X-Content-Type-Options  "nosniff"
-        X-Frame-Options         "DENY"
-        Content-Security-Policy "default-src https:"
-    }
-    gzip
-}
-```
+> https://localhost:2015/base_url/ {
+>     tls self_signed
+>     root _site/
+>     header / {
+>         X-Content-Type-Options  "nosniff"
+>         X-Frame-Options         "DENY"
+>         Content-Security-Policy "default-src https:"
+>     }
+>     gzip
+> }
+> ```
 
 
 [caddy]: https://caddyserver.com/
