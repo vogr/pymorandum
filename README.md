@@ -1,6 +1,6 @@
 # Pymorandum
 
-Pymorandum is a blazing fast photo gallery site generator. From a simple collection of photos organised in directories, pymorandum creates a simple static website ready to be served by a webserver (or by [GitLab Pages][gitlab-pages]!).
+Pymorandum is a blazing fast photo gallery site generator. From a simple collection of photos organised in directories, pymorandum creates a simple static website ready to be served by a webserver (or by [Github Pages][github-pages]!).
 
 Visit a [live example][example] now to see what the output looks like, and see behind the scenes in the [source repository][gallery-source]. (And a quick thanks to [Pixabay][pixabay] for the royalty-free photos and videos).
 
@@ -16,9 +16,9 @@ Pymorandum's speed stems from its usage of the [ninja build system][ninja] toget
 
 This project was greatly inspired by [Jack000's Exposé][expose] and [PetitPrince's pyxpose][pyxpose] from which I even recycled bits of code (thanks to the generous MIT license).
 
-[gitlab-pages]: https://about.gitlab.com/features/pages/
-[example]: https://vogier.gitlab.io/pymorandum-gallery
-[gallery-source]: https://gitlab.com/vogier/pymorandum-gallery
+[github-pages]: https://help.github.com/en/github/working-with-github-pages/getting-started-with-github-pages
+[example]: https://vogier.github.io/pymorandum-gallery/
+[gallery-source]: https://github.com/vogr/pymorandum-gallery
 [ninja]: https://ninja-build.org/
 [pixabay]: https://pixabay.com
 [vipsthumbnail]: https://jcupitt.github.io/libvips/API/current/Using-vipsthumbnail.md.html
@@ -48,7 +48,7 @@ It should work too! Simply install the previously listed dependencies and make s
 
 ### Pymorandum
 ```bash
-git clone https://gitlab.com/vogier/pymorandum
+git clone https://github.com/vogier/pymorandum
 cd pymorandum
 python3 -m pip install .
 ```
@@ -73,7 +73,7 @@ pymorandum --init
 
 Your directory will now contain the file `config.ini` and the folder `resources`.
 You should modify `config.ini` to your needs. Here is a quick description of the different variables:
-* `base_url`: if your photo gallery is hosted at `yoursite.com`, leave it blank, else if it lives at `yoursite.com/photo-gallery` change it to `photo-gallery`. On GitLab Pages, it should correspong to your chosen `baseurl` (by default the project name). (Note: leading and trailing slashes are ignored.)
+* `base_url`: if your photo gallery is hosted at `yoursite.com`, leave it blank, else if it lives at `yoursite.com/photo-gallery` change it to `photo-gallery`. On Github Pages, it should correspong to your chosen `baseurl` (by default the project name). (Note: leading and trailing slashes are ignored.)
 * `input_directory`: the directory where pymorandum will look for your collections. A collection is a directory containing photos or videos. For each collection, pymorandum will create a page accessible from the sidebar on the website.
 * `output_directory`: the directory where pymorandum will generate the website.
 * `resources_directory`: pymorandum will look for a template named `template.html` in this folder. The `assets` folder in the resources directory will simply be copied to the `output_directory`.
